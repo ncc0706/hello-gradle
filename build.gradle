@@ -9,8 +9,14 @@
 plugins {
     // Apply the java-library plugin to add support for Java Library
     id 'java-library'
-
 }
+
+apply plugin: 'signing'
+apply plugin: 'maven-publish'
+
+group 'io.github.ncc0706'
+version "0.0.1"
+//version "0.0.1-SNAPSHOT"
 
 repositories {
     jcenter()
@@ -20,4 +26,113 @@ dependencies {
 
     implementation 'commons-codec:commons-codec:1.14'
     testImplementation 'junit:junit:4.12'
+}
+
+task sourceJar(type: Jar) {
+    classifier "sources"
+    from sourceSets.main.allJava
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier "javadoc"
+    from javadoc.destinationDir
+}
+
+javadoc {
+    description = "生成jar格式的javadoc。"
+    // 只显示 protected 和 public 的类和成员
+    options.memberLevel = org.gradle.external.javadoc.JavadocMemberLevel.PROTECTED
+    options.author = true
+    options.version = true
+    options.header = project.name
+    // 静默javadoc检查（比如不支持@date会报错等），jdk 8+
+    options.addStringOption('Xdoclint:none', '-quiet')
+    // 防止本地打开中文乱码
+    options.addStringOption("charset", "UTF-8")
+    // suppress warnings due to cross-module @see and @link references;
+    // note that global 'api' task does display all warnings.
+    logging.captureStandardError LogLevel.INFO
+    // suppress "## warnings" message
+    logging.captureStandardOutput LogLevel.INFO
+    // 编码一定要配置否则直接出错
+    options.encoding = "UTF-8"
+    options.charSet = "UTF-8"
+}
+
+publishing {
+
+    publications {
+        mavenJava(MavenPublication) {
+
+            from components.java
+            artifact sourceJar
+            artifact javadocJar
+
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+
+            // 添加 pom 相关信息
+            // https://docs.gradle.org/current/dsl/org.gradle.api.publish.maven.MavenPublication.html
+            pom {
+                name = "hello-gradle"
+                description = "使用gradle发布项目到中央仓库"
+                url = "https://github.com/ncc0706/hello-gradle"
+                licenses {
+                    license {
+                        name = "The MIT License"
+                        url = "https://github.com/ncc0706/hello-gradle/master/LICENSE"
+                    }
+                }
+                developers {
+                    developer {
+                        id = "ncc0706"
+                        name = "ncc0706"
+                        email = "ncc0706@gmail.com"
+                    }
+                }
+                scm {
+                    connection = "scm:git:https://github.com/ncc0706/hello-gradle.git"
+                    developerConnection = "scm:git:https://github.com/ncc0706/hello-gradle.git"
+                    url = "https://github.com/ncc0706/hello-gradle"
+                }
+            }
+        }
+    }
+
+
+    repositories {
+
+        // snapshots 仓库
+        maven {
+            name = 'snapshot'
+            url = 'https://oss.sonatype.org/content/repositories/snapshots'
+            credentials {
+                username = "${NEXUS_USERNAME}"
+                password = "${NEXUS_PASSWORD}"
+            }
+        }
+
+        // releases 仓库
+        maven {
+            // 在对 task 中会生成对应的名称 publishMavenJavaPublicationToxxx
+            // 后面的 xxx 就是你这里的名称，表示你要把jar 上传到这个仓库中
+            name 'release'  // 为你这个仓库起名
+            url 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+            credentials {
+                username = "${NEXUS_USERNAME}"  // 之前在 sonatype 注册的账户名
+                password = "${NEXUS_PASSWORD}" // 对应的密码
+            }
+        }
+
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
 }
