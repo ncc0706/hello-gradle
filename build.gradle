@@ -60,7 +60,7 @@ mavenPublishing {
     // https://vanniktech.github.io/gradle-maven-publish-plugin/what/
     // the first parameter configures the -javadoc artifact, possible values:
     // - `JavadocJar.None()` don't publish this artifact
-    // - `JavadocJar.Empty()` publish an emprt jar
+    // - `JavadocJar.Empty()` publish an empty jar
     // - `JavadocJar.Javadoc()` to publish standard javadocs
     // the second whether to publish a sources jar
     configure(new JavaLibrary(new JavadocJar.None(), false))
