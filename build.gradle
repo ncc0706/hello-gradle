@@ -1,14 +1,15 @@
+import com.vanniktech.maven.publish.SonatypeHost
 
 plugins {
-    // Apply the java-library plugin to add support for Java Library
     id 'java-library'
+    id 'com.vanniktech.maven.publish' version '0.32.0'
 }
 
 apply plugin: 'signing'
-apply plugin: 'maven-publish'
+apply plugin: 'com.vanniktech.maven.publish'
 
 group 'io.github.ncc0706'
-version "0.0.1"
+version "0.0.1-SNAPSHOT"
 
 repositories {
 }
@@ -52,62 +53,42 @@ javadoc {
     options.charSet = "UTF-8"
 }
 
-publishing {
 
-    publications {
-        mavenJava(MavenPublication) {
+mavenPublishing {
+    // mavenCentral snapshot repository(新的)
+    // https://central.sonatype.com/repository/maven-snapshots
+    // https://central.sonatype.com/service/rest/repository/browse/maven-snapshots/
+    // 必须使用高版本才支持（0.31.0 支持上传 snapshot）
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL, true)
 
-            from components.java
-            artifact sourceJar
-            artifact javadocJar
+    // Enable GPG signing for all publications
+    signAllPublications()
 
-            versionMapping {
-                usage('java-api') {
-                    fromResolutionOf('runtimeClasspath')
-                }
-                usage('java-runtime') {
-                    fromResolutionResult()
-                }
-            }
-
-            // 添加 pom 相关信息
-            // https://docs.gradle.org/current/dsl/org.gradle.api.publish.maven.MavenPublication.html
-            pom {
-                name = "hello-gradle"
-                description = "使用gradle发布项目到中央仓库"
-                url = "https://github.com/ncc0706/hello-gradle"
-                licenses {
-                    license {
-                        name = "The MIT License"
-                        url = "https://github.com/ncc0706/hello-gradle/master/LICENSE"
-                    }
-                }
-                developers {
-                    developer {
-                        id = "ncc0706"
-                        name = "ncc0706"
-                        email = "ncc0706@gmail.com"
-                    }
-                }
-                scm {
-                    connection = "scm:git:https://github.com/ncc0706/hello-gradle.git"
-                    developerConnection = "scm:git:https://github.com/ncc0706/hello-gradle.git"
-                    url = "https://github.com/ncc0706/hello-gradle"
-                }
+    // 添加 pom 相关信息
+    // https://docs.gradle.org/current/dsl/org.gradle.api.publish.maven.MavenPublication.html
+    pom {
+        name = "hello-gradle"
+        description = "使用gradle发布项目到中央仓库"
+        url = "https://github.com/ncc0706/hello-gradle"
+        licenses {
+            license {
+                name = "The MIT License"
+                url = "https://github.com/ncc0706/hello-gradle/master/LICENSE"
             }
         }
+        developers {
+            developer {
+                id = "ncc0706"
+                name = "ncc0706"
+                email = "ncc0706@gmail.com"
+            }
+        }
+        scm {
+            connection = "scm:git:https://github.com/ncc0706/hello-gradle.git"
+            developerConnection = "scm:git:https://github.com/ncc0706/hello-gradle.git"
+            url = "https://github.com/ncc0706/hello-gradle"
+        }
     }
-
-
-    repositories {
-
-        
-
-    }
-}
-
-signing {
-    sign publishing.publications.mavenJava
 }
 
 wrapper {
